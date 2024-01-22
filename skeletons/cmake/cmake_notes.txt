@@ -1,0 +1,31 @@
+1. make a folder for your current homework
+
+mkdir homeworkx
+cd homeworkx
+
+2. put your source there
+3. put the appropriate cmake configuration there:
+
+cp some/path/CMakeLists.mpi.c.txt homeworkx/CMakeLists.txt
+
+(or substitute other languages as needed)
+
+4. edit the cmake file for your program name
+
+To use cmake:
+
+1. make a build directory, for instance in your homework dir
+
+cd homeworkx
+mkdir build
+
+2. go there and make your program:
+
+cd build
+cmake ..
+make
+
+3. run your program, on a TACC compute node
+
+idev # or submit a batch job
+ibrun yourprogram
