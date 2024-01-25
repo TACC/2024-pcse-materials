@@ -17,8 +17,8 @@
 #SBATCH -N 1               # Total # of nodes (must be 1 for serial)
 #SBATCH -n 10               # Total # of mpi tasks (should be 1 for serial)
 #SBATCH -t 00:10:00        # Run time (hh:mm:ss)
-#SBATCH --mail-type=end    # Send email at begin and end of job
-#SBATCH --mail-user=username@utexas.edu
+##SBATCH --mail-type=end    # Send email at begin and end of job
+##SBATCH --mail-user=username@utexas.edu
 ##SBATCH -A myproject       # Project/Allocation name (req'd if you have more than 1)
 
 # Any other commands must follow all #SBATCH directives...
