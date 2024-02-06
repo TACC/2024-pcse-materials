@@ -1,0 +1,39 @@
+Screen output:
+
+C printf is thread-safe:
+
+  printf("Hello from processor %d out of %d!\n", procno, nprocs);
+
+C++ cout is not thread-safe:
+
+  cout << "Hello from process " << procno << " out of " << nprocs << endl;
+
+C++ stringstream is one way of making it safe:
+
+  stringstream proctext;
+  proctext << "Hello from processor " << procno << " out of " << nprocs << endl;
+  cerr << proctext.str(); proctext.clear();
+
+File output:
+
+C:
+
+        sprintf(fname, "processor%d.txt", a);
+        FILE *f = fopen(fname, "w");
+        fprintf(f, "Hello from process %d of %d!\n", a, b);
+
+C++:
+
+  string fname = "Proc"+to_string(procno)+".txt";
+  ofstream File(fname);
+  File << "Hello from process " << procno << " out of " << nprocs << endl;
+  File.close();
+
+Oops:
+
+this does not generate a unique file name:
+
+  ofstream outfile("out.txt");
+  outfile << "(" << procno << ", " << nprocs << ")" << endl;
+  outfile.close();
+  
