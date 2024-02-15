@@ -1,0 +1,9 @@
+================ Correct
+
+  for (int pivot_column=0; pivot_column<N; pivot_column++) {
+    if (pivot_column==procno) {
+      // compute the scalings
+    }
+    // the process that knows the scalings needs to act as root
+    MPI_Bcast(scalings, N, MPI_DOUBLE, pivot_column, comm);
+    
