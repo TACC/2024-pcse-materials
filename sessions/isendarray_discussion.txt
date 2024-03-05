@@ -1,0 +1,112 @@
+================ straightforward
+
+  if(procno != 0) {
+          recvfrom = procno - 1;
+    // et cetera
+ MPI_Isend(
+      &(indata[N - 1]),
+            1,MPI_DOUBLE, sendto,0, comm,&(requests[0]));
+  MPI_Irecv(&leftdata,1,MPI_DOUBLE, recvfrom,0, comm,&(requests[1]));
+
+  // then the right neighbor data
+if (procno == 0) {
+    sendto = MPI_PROC_NULL;
+    // et cetera
+  MPI_Isend( 
+      &(indata[0]),
+            1,MPI_DOUBLE, sendto,0, comm,&(requests[2]));
+  MPI_Irecv(&rightdata,1,MPI_DOUBLE, recvfrom,0, comm,&(requests[3]));
+
+  // make sure all irecv/isend operations are concluded
+  MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
+
+  /*
+   * Do the averaging operation
+   * Note that leftdata==rightdata==0 if not explicitly received.
+   */
+  for (int i=0; i<N; i++)
+
+================ short
+
+ // first specify left neighbor data
+  sendto = (procno == nprocs - 1) ? MPI_PROC_NULL : procno + 1;
+  recvfrom = (procno == 0) ? MPI_PROC_NULL : procno - 1;
+
+================ failure of the correctness test
+
+  if(procno != 0) {
+          recvfrom = procno - 1;
+    // et cetera
+  MPI_Isend(&indata[procno],1,MPI_DOUBLE, sendto,0, comm,&(requests[0]));
+  MPI_Irecv(&leftdata,1,MPI_DOUBLE, recvfrom,0, comm,&(requests[1]));
+
+  // then the right neighbor data
+/**** your code here ****/
+  MPI_Isend(&indata[procno],1,MPI_DOUBLE, sendto,0, comm,&(requests[2]));
+  MPI_Irecv(&rightdata,1,MPI_DOUBLE, recvfrom,0, comm,&(requests[3]));
+
+  // make sure all irecv/isend operations are concluded
+/**** your code here ****/
+  MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
+
+================ not as efficient
+
+        MPI_Wait(&(requests[0]), MPI_STATUS_IGNORE);
+        MPI_Wait(&(requests[1]), MPI_STATUS_IGNORE);
+        MPI_Wait(&(requests[2]), MPI_STATUS_IGNORE);
+        MPI_Wait(&(requests[3]), MPI_STATUS_IGNORE);
+
+================ bonus point!
+
+  recvfrom = (procno != 0)? procno - 1: MPI_PROC_NULL;
+  sendto = procno<(nprocs-1)? procno + 1: MPI_PROC_NULL;
+  MPI_Isend(indata,1,MPI_DOUBLE, sendto,0, comm,&requests[0]);
+  MPI_Irecv(&leftdata,1,MPI_DOUBLE, recvfrom,0, comm,&requests[1]);
+
+  // then the right neighbor data
+/**** your code here ****/
+  recvfrom = (procno != (nprocs - 1))? procno + 1:MPI_PROC_NULL;
+  sendto = (procno!=0)? procno - 1: MPI_PROC_NULL;
+  MPI_Isend(indata,1,MPI_DOUBLE, sendto,0, comm,&(requests[2]));
+  MPI_Irecv(&rightdata,1,MPI_DOUBLE, recvfrom,0, comm,&(requests[3]));
+
+  // make sure all irecv/isend operations are concluded
+/**** your code here ****/
+  for (int i=1; i<N-1; i++) {
+    outdata[i] = indata[i-1] + indata[i] + indata[i+1];
+  }
+
+  MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
+
+  /*
+   * Do the averaging operation
+   * Note that leftdata==rightdata==0 if not explicitly received.
+   */
+  outdata[0] = leftdata + indata[0] + indata[1];
+  outdata[N-1] = indata[N-2] + indata[N-1] + rightdata;
+
+================ bonus point for exploring beyond the lecture
+
+  int leftRequestFinished = 0; // MPI_request uses 0 for false, 1 for true, like C.
+  int rightRequestFinished = 0;
+
+  bool leftCalculated = false;
+  bool rightCalculated = false;
+
+  // Tests if communications have finished, ignores order
+  while (!(leftRequestFinished && rightRequestFinished)) {
+    MPI_Test(&requests[1], &leftRequestFinished, MPI_STATUS_IGNORE);
+    MPI_Test(&requests[3], &rightRequestFinished, MPI_STATUS_IGNORE);
+
+    if (leftRequestFinished && !leftCalculated) {
+      outdata[0] = leftdata + indata[0] + indata[1]; // case for index 0.
+      leftCalculated = true;
+    }
+
+    if (rightRequestFinished && !rightCalculated) {
+      outdata[N - 1] = indata[N - 2] + indata[N - 1] + rightdata;
+      rightCalculated = true;
+    }
+  }
+
+  MPI_Waitall(4, requests, MPI_STATUSES_IGNORE); // Still do MPI_waitall to deallocate requests
