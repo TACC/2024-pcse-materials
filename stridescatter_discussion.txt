@@ -1,0 +1,31 @@
+================ Good
+
+    count = localsize; stride = nprocs; blocklength = 1;
+    MPI_Type_vector(count,blocklength,stride,MPI_INT,&scattertype);
+    MPI_Type_create_resized(scattertype, 0, sizeof(int), &interleavetype);
+    MPI_Type_commit(&interleavetype);
+
+
+================ Interesting
+
+    count = localsize; stride = nprocs; blocklength = 1;
+    MPI_Type_vector(count,blocklength,stride,MPI_INT,&scattertype);
+    MPI_Type_get_extent(MPI_INT, &l, &e);
+    MPI_Type_create_resized(scattertype, 0, e, &interleavetype);
+
+
+================ Setting lb?
+
+    MPI_Type_create_resized(scattertype, 1, sizeof(int), &interleavetype);
+
+================ Hm.
+
+  e = (procno+1)*sizeof(int);
+  //l = procno * sizeof(int);
+  MPI_Type_create_resized(scattertype,l,e,&interleavetype);
+
+================ Voodoo programming
+
+    MPI_Type_get_extent(MPI_INT, &l, &e);
+    e += (nprocs - 1) * l;
+    MPI_Type_create_resized(scattertype, l, e, &interleavetype);
